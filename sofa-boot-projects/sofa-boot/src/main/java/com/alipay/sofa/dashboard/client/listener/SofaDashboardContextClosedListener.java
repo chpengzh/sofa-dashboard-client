@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.dashboard.client.listener;
 
-import com.alipay.sofa.dashboard.client.model.common.Application;
 import com.alipay.sofa.dashboard.client.registry.AppPublisher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
@@ -35,13 +34,10 @@ public class SofaDashboardContextClosedListener implements ApplicationListener<C
     @Autowired
     private AppPublisher register;
 
-    @Autowired
-    private Application  app;
-
     @Override
     public void onApplicationEvent(ContextClosedEvent contextClosedEvent) {
         try {
-            register.unRegister(app);
+            register.unRegister();
         } catch (Exception e) {
             e.printStackTrace();
         }

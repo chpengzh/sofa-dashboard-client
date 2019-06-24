@@ -16,8 +16,8 @@
  */
 package com.alipay.sofa.dashboard.client.config;
 
-import com.alipay.sofa.dashboard.client.listener.SofaDashboardContextClosedListener;
 import com.alipay.sofa.dashboard.client.listener.SofaDashboardAppStartListener;
+import com.alipay.sofa.dashboard.client.listener.SofaDashboardContextClosedListener;
 import com.alipay.sofa.dashboard.client.model.common.Application;
 import com.alipay.sofa.dashboard.client.properties.SofaDashboardProperties;
 import com.alipay.sofa.dashboard.client.registry.AppPublisher;
@@ -64,7 +64,7 @@ public class AppRegistryConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public AppPublisher getAppInstanceRegistry(SofaDashboardProperties prop) {
+    public AppPublisher getAppInstanceRegistry(SofaDashboardProperties prop, Application application) {
         ZookeeperRegistryConfig config = new ZookeeperRegistryConfig();
         config.setAddress(prop.getZookeeper().getAddress());
         config.setBaseSleepTimeMs(prop.getZookeeper().getBaseSleepTimeMs());
@@ -72,8 +72,8 @@ public class AppRegistryConfiguration {
         config.setSessionTimeoutMs(prop.getZookeeper().getSessionTimeoutMs());
         config.setConnectionTimeoutMs(prop.getZookeeper().getConnectionTimeoutMs());
 
-        ZookeeperAppPublisher registry = new ZookeeperAppPublisher();
-        registry.start(config);
+        ZookeeperAppPublisher registry = new ZookeeperAppPublisher(config, application);
+        registry.start();
         return registry;
     }
 

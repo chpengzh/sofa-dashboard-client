@@ -24,7 +24,7 @@ import java.util.Objects;
  *
  * @author guolei.sgl (guolei.sgl@antfin.com) 19/1/19 上午11:48
  **/
-public class Application implements Serializable {
+public class Application implements Serializable, Comparable<Application> {
 
     private static final int serialVersionUID = 0x11;
 
@@ -124,5 +124,13 @@ public class Application implements Serializable {
     public int hashCode() {
         return Objects.hash(getAppName(), getHostName(), getPort(), getAppState(), getStartTime(),
             getLastRecover());
+    }
+
+    @Override
+    public int compareTo(Application o) {
+        int nameSign = Integer.compare(appName.compareTo(o.appName), 0) << 2;
+        int hostSign = Integer.compare(hostName.compareTo(o.hostName), 0) << 1;
+        int portSign = Integer.compare(port, o.port);
+        return nameSign + hostSign + portSign;
     }
 }

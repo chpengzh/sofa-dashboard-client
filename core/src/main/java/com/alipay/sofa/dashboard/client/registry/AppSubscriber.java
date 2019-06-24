@@ -24,25 +24,42 @@ import java.util.List;
 /**
  * @author chen.pengzhi (chpengzh@foxmail.com)
  */
-public interface AppSubscriber<CFG extends RegistryConfig> {
+public abstract class AppSubscriber<CFG extends RegistryConfig> {
+
+    private final CFG config;
+
+    public AppSubscriber(CFG config) {
+        this.config = config;
+    }
+
+    public CFG getConfig() {
+        return config;
+    }
 
     /**
      * Startup registry.
      *
      * @return return {@code false} if it is already started
      */
-    boolean start(CFG config);
+    public abstract boolean start();
 
     /**
      * Shutdown registry.
      */
-    void shutdown();
+    public abstract void shutdown();
 
     /**
-     * String name
+     * Get all application instances.
      *
      * @return application instance list
      */
-    List<Application> getByName(String appName);
+    public abstract List<Application> getAll();
+
+    /**
+     * Get application instances by name.
+     *
+     * @return application instance list
+     */
+    public abstract List<Application> getByName(String appName);
 
 }

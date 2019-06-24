@@ -47,10 +47,9 @@ public class SofaDashboardAppStartListener implements
 
     @Override
     public void onApplicationEvent(SofaDashboardAppStartEvent event) {
-        app.setLastRecover(System.currentTimeMillis());
-        app.setAppState(Status.UP.toString());
+
         try {
-            register.register(app);
+            register.register();
         } catch (Exception e) {
             LOGGER.info("sofa dashboard client register failed.", e);
         }

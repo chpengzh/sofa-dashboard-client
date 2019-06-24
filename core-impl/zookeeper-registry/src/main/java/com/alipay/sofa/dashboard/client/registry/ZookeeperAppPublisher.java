@@ -17,90 +17,77 @@
 package com.alipay.sofa.dashboard.client.registry;
 
 import com.alipay.sofa.dashboard.client.model.common.Application;
+import com.alipay.sofa.dashboard.client.model.common.ZookeeperConstants;
 import com.alipay.sofa.dashboard.client.utils.JsonUtils;
-import org.apache.curator.RetryPolicy;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.state.ConnectionState;
-import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 /**
  * @author chen.pengzhi (chpengzh@foxmail.com)
  */
-public class ZookeeperAppPublisher extends ZookeeperRegistryBase
-                                                                implements
-                                                                AppPublisher<ZookeeperRegistryConfig> {
+public class ZookeeperAppPublisher extends AppPublisher<ZookeeperRegistryConfig> {
 
-    private static final String  SOFA_BOOT_CLIENT_ROOT     = "apps";
+    private final ZookeeperRegistryClient client;
 
-    private static final String  SOFA_BOOT_CLIENT_INSTANCE = "instance";
+    private static final Logger           LOGGER = LoggerFactory
+                                                     .getLogger(ZookeeperAppPublisher.class);
 
-    private static final Logger  LOGGER                    = LoggerFactory
-                                                               .getLogger(ZookeeperAppPublisher.class);
-
-    private volatile Application cachedInstance;
-
-    @Override
-    public synchronized void register(Application instance) throws Exception {
-        this.cachedInstance = instance;
-
-        Stat stat = getCuratorClient().checkExists().forPath(SOFA_BOOT_CLIENT_ROOT);
-        if (stat == null) {
-            getCuratorClient().create().creatingParentContainersIfNeeded()
-                .withMode(CreateMode.PERSISTENT).forPath(SOFA_BOOT_CLIENT_ROOT);
-        }
-        byte[] bytes = JsonUtils.toJsonBytes(instance);
-        String sessionNode = toSessionNode(instance);
-        getCuratorClient().create().creatingParentContainersIfNeeded()
-            .withMode(CreateMode.EPHEMERAL).forPath(sessionNode, bytes);
+    public ZookeeperAppPublisher(ZookeeperRegistryConfig config, Application application) {
+        super(application, config);
+        this.client = new ZookeeperRegistryClient(config);
     }
 
     @Override
-    public synchronized void unRegister(Application instance) {
-        if (Objects.equals(cachedInstance, instance)) {
-            cachedInstance = null;
-        }
-
-        String sessionNode = toSessionNode(instance);
-        try {
-            getCuratorClient().delete().forPath(sessionNode);
-        } catch (Exception e) {
-            LOGGER.error("Failed to deregister application to zookeeper.", e);
-        }
-    }
-
-    /**
-     * Convert an instance definition into session node name
-     *
-     * @param instance application instance
-     * @return session node name
-     */
-    private String toSessionNode(Application instance) {
-        String appId = String.format("%s:%d?startTime=%d&lastRecover=%d&state=%s",
-            instance.getHostName(), instance.getPort(), instance.getStartTime(),
-            instance.getLastRecover(), instance.getAppState());
-        String appName = instance.getAppName();
-        return String.format("/%s/%s/%s/%s", SOFA_BOOT_CLIENT_ROOT, SOFA_BOOT_CLIENT_INSTANCE,
-            appName, appId);
+    public boolean start() {
+        return client.doStart((curatorFramework) ->
+            curatorFramework.getConnectionStateListenable().addListener((cli, newState) -> {
+                if (newState == ConnectionState.RECONNECTED) {
+                    LOGGER.info("Try to recover session node while reconnected");
+                    try {
+                        register();
+                    } catch (Exception e) {
+                        LOGGER.error("Recover session error", e);
+                    }
+                }
+            }));
     }
 
     @Override
-    void onReconnected() {
-        Application instance = this.cachedInstance;
-        if (instance != null) {
-            LOGGER.info("Try to recover session node");
-            try {
-                register(instance);
-            } catch (Exception e) {
-                LOGGER.error("Recover session error", e);
+    public void shutdown() {
+        client.doShutdown();
+    }
+
+    @Override
+    public synchronized void register() throws Exception {
+        Application app = getApplication();
+        app.setLastRecover(System.currentTimeMillis());
+
+        if (client.isRunning()) {
+            Stat stat = client.getCuratorClient().checkExists()
+                .forPath(ZookeeperConstants.SOFA_BOOT_CLIENT_ROOT);
+            if (stat == null) {
+                client.getCuratorClient().create().creatingParentContainersIfNeeded()
+                    .withMode(CreateMode.PERSISTENT)
+                    .forPath(ZookeeperConstants.SOFA_BOOT_CLIENT_ROOT);
             }
+            byte[] bytes = JsonUtils.toJsonBytes(app);
+            String sessionNode = client.toSessionNode(app);
+            client.getCuratorClient().create().creatingParentContainersIfNeeded()
+                .withMode(CreateMode.EPHEMERAL).forPath(sessionNode, bytes);
         }
     }
+
+    @Override
+    public void unRegister() throws Exception {
+        Application app = getApplication();
+
+        if (client.isRunning()) {
+            String sessionNode = client.toSessionNode(app);
+            client.getCuratorClient().delete().forPath(sessionNode);
+        }
+    }
+
 }

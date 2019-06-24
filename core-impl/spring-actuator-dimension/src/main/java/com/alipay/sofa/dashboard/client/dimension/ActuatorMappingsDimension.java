@@ -17,6 +17,7 @@
 package com.alipay.sofa.dashboard.client.dimension;
 
 import com.alipay.sofa.dashboard.client.model.mappings.MappingsDescriptor;
+import com.alipay.sofa.dashboard.client.utils.JsonUtils;
 import org.springframework.boot.actuate.web.mappings.MappingsEndpoint;
 import org.springframework.boot.actuate.web.mappings.MappingsEndpoint.ApplicationMappings;
 import org.springframework.lang.NonNull;
@@ -30,7 +31,7 @@ import java.util.stream.Collectors;
  */
 public class ActuatorMappingsDimension implements ApplicationDimension<MappingsDescriptor> {
 
-    private static final String    SPIT = ", ";
+    private static final String SPIT = ", ";
 
     private final MappingsEndpoint endpoint;
 
@@ -51,24 +52,29 @@ public class ActuatorMappingsDimension implements ApplicationDimension<MappingsD
     @Override
     public MappingsDescriptor currentValue() {
         ApplicationMappings mappingsInfo = endpoint.mappings();
+        System.out.println(JsonUtils.toJsonString(mappingsInfo));
 
         final Map<String, MappingsDescriptor.MappingEntity> result = new HashMap<>();
         mappingsInfo.getContexts().forEach((key, value) -> {
+            // It is easier to parse a complex map instead, while some inner objects can be null
+            //noinspection unchecked
+            Map<String, Object> valueMap = JsonUtils.parseObject(
+                JsonUtils.toJsonString(value), Map.class);
+
             MappingsDescriptor.MappingEntity info = new MappingsDescriptor.MappingEntity();
 
-            Map<String, Object> mappings = value.getMappings();
-            List<Map<String, Object>> dispatchServlets = readDict(mappings,
-                "dispatcherServlets", "dispatcherServlet");
+            List<Map<String, Object>> dispatchServlets = readDict(valueMap,
+                "mappings", "dispatcherServlets", "dispatcherServlet");
             info.getDispatcherServlet().addAll(parseDispatchServlet(
                 Optional.ofNullable(dispatchServlets).orElse(new ArrayList<>())));
 
-            List<Map<String, Object>> servletFilters = readDict(mappings,
-                "servletFilters");
+            List<Map<String, Object>> servletFilters = readDict(valueMap,
+                "mappings", "servletFilters");
             info.getServletFilters().addAll(parseServletFilter(
                 Optional.ofNullable(servletFilters).orElse(new ArrayList<>())));
 
-            List<Map<String, Object>> servlets = readDict(mappings,
-                "servlets");
+            List<Map<String, Object>> servlets = readDict(valueMap,
+                "mappings", "servlets");
             info.getServlets().addAll(parseServletInfo(
                 Optional.ofNullable(servlets).orElse(new ArrayList<>())));
 
@@ -205,9 +211,10 @@ public class ActuatorMappingsDimension implements ApplicationDimension<MappingsD
      * @param listStr text list
      * @return mapped text
      */
-    private String mapToDesc(@Nullable List<String> listStr) {
+    private String mapToDesc(@Nullable Collection<?> listStr) {
         return Optional.ofNullable(listStr).orElse(new ArrayList<>())
             .stream()
+            .map(String::valueOf)
             .reduce((a, b) -> a + SPIT + b)
             .orElse("");
     }

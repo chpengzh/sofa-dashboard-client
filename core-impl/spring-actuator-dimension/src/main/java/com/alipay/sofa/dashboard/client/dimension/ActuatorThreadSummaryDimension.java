@@ -72,7 +72,7 @@ public class ActuatorThreadSummaryDimension implements
             Consumer<Integer> setter = (Consumer<Integer>) parallel[1];
             setter.accept(sizeAsMB);
         }
-        return null;
+        return descriptor;
     }
 
     /**

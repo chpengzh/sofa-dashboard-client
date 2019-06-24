@@ -17,23 +17,176 @@
 package com.alipay.sofa.dashboard.client.registry;
 
 import com.alipay.sofa.dashboard.client.model.common.Application;
+import com.alipay.sofa.dashboard.client.model.common.ZookeeperConstants;
+import com.alipay.sofa.dashboard.client.utils.JsonUtils;
+import org.apache.curator.framework.recipes.cache.ChildData;
+import org.apache.curator.framework.recipes.cache.TreeCache;
+import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
+import org.apache.curator.framework.recipes.cache.TreeCacheListener;
+import org.jboss.netty.util.internal.ConcurrentHashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.lang.Nullable;
 
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * @author chen.pengzhi (chpengzh@foxmail.com)
  */
-public class ZookeeperAppSubscriber extends ZookeeperRegistryBase
-                                                                 implements
-                                                                 AppSubscriber<ZookeeperRegistryConfig> {
+public class ZookeeperAppSubscriber extends AppSubscriber<ZookeeperRegistryConfig> {
 
-    @Override
-    public List<Application> getByName(String appName) {
-        return null;
+    private static final Logger                    LOGGER       = LoggerFactory
+                                                                    .getLogger(ZookeeperAppSubscriber.class);
+
+    /**
+     * In-memory copy of zookeeper session informations
+     */
+    private volatile Map<String, Set<Application>> applications = new ConcurrentHashMap<>();
+
+    private final ZookeeperRegistryClient          client;
+
+    public ZookeeperAppSubscriber(ZookeeperRegistryConfig config) {
+        super(config);
+        this.client = new ZookeeperRegistryClient(config);
     }
 
     @Override
-    void onReconnected() {
-        //TODO: Fetch all on reconnected
+    public boolean start() {
+        boolean startFlag = client.doStart((curatorFramework -> {
+            // Add listeners to manage local cache
+            TreeCache cache = new TreeCache(curatorFramework,
+                ZookeeperConstants.SOFA_BOOT_CLIENT_ROOT);
+            TreeCacheListener listener = (client, event) -> {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Dashboard client event type = {},data = {}", event.getType(),
+                        event.getData());
+                }
+                switch (event.getType()) {
+                    case NODE_ADDED:
+                    case NODE_UPDATED:
+                        runInSafe(() -> doCreateOrUpdateApplications(event));
+                        break;
+                    case NODE_REMOVED:
+                    case CONNECTION_LOST:
+                        runInSafe(() -> doRemoveApplications(event));
+                        break;
+                    case CONNECTION_RECONNECTED: // Try to recover data while reconnected
+                        runInSafe(this::initApplications);
+                        break;
+                    default:
+                        break;
+                }
+            };
+            cache.getListenable().addListener(listener);
+        }));
+        if (startFlag) {
+            runInSafe(this::initApplications);
+        }
+        return startFlag;
+    }
+
+    @Override
+    public void shutdown() {
+        client.doShutdown();
+    }
+
+    @Override
+    public List<Application> getAll() {
+        // Get a readonly copy
+        Map<String, Set<Application>> copy = Collections.unmodifiableMap(this.applications);
+
+        Set<Application> apps = copy.values().stream().reduce((a, b) -> {
+            Set<Application> collector = new HashSet<>(a);
+            collector.addAll(b);
+            return collector;
+        }).orElse(new HashSet<>());
+        return new ArrayList<>(apps);
+    }
+
+    @Override
+    public List<Application> getByName(@Nullable String appName) {
+        // Get a readonly copy
+        Map<String, Set<Application>> copy = Collections.unmodifiableMap(this.applications);
+
+        Set<Application> apps = copy.get(appName);
+        return apps == null ? new ArrayList<>() : new ArrayList<>(apps);
+    }
+
+    private void initApplications() throws Exception {
+        List<String> appNames = client.getCuratorClient().getChildren()
+            .forPath(ZookeeperConstants.SOFA_BOOT_CLIENT_INSTANCE);
+        if (appNames == null || appNames.isEmpty()) {
+            return;
+        }
+
+        final Map<String, Set<Application>> newCacheInstance = new ConcurrentHashMap<>();
+        appNames.forEach((item) -> {
+            String instancePath = String.format("%s/%s",
+                ZookeeperConstants.SOFA_BOOT_CLIENT_INSTANCE, item);
+            try {
+                Set<Application> instanceList = new ConcurrentSkipListSet<>();
+
+                List<String> instances = client.getCuratorClient().getChildren()
+                    .forPath(instancePath);
+                instances.forEach(instance -> {
+                    String appInstance = String.format("%s/%s", instancePath, instance);
+                    try {
+                        byte[] bytes = client.getCuratorClient().getData().forPath(appInstance);
+                        Application application = JsonUtils.parseObject(bytes, Application.class);
+                        instanceList.add(application);
+                    } catch (Throwable e) {
+                        LOGGER.error("Error to get app instance from Zookeeper.", e);
+                    }
+                });
+                newCacheInstance.put(item, instanceList);
+
+            } catch (Throwable e) {
+                LOGGER.error("Error to get instances from Zookeeper.", e);
+            }
+        });
+        this.applications = newCacheInstance;
+        LOGGER.info("Dashboard client init success.current app count is {}", applications.size());
+    }
+
+    private void doCreateOrUpdateApplications(TreeCacheEvent event) {
+        ChildData chileData = event.getData();
+        Application app = JsonUtils.parseObject(chileData.getData(), Application.class);
+        if (app != null) {
+            applications.compute(app.getAppName(), (key, value) -> {
+                Set<Application> group = value == null ? new ConcurrentSkipListSet<>() : value;
+                group.remove(app); // remove if exists
+                group.add(app);
+                return group;
+            });
+        }
+    }
+
+    private void doRemoveApplications(TreeCacheEvent event) {
+        ChildData chileData = event.getData();
+        Application app = JsonUtils.parseObject(chileData.getData(), Application.class);
+        if (app != null) {
+            applications.computeIfPresent(app.getAppName(), (key, value) -> {
+                value.remove(app); // Always remove whatever if it's exists
+                return value;
+            });
+        }
+    }
+
+    /**
+     * A tool function to simplify try/cache logic
+     *
+     * @param task decorated task
+     */
+    private void runInSafe(ThrowableRunnable task) {
+        try {
+            task.run();
+        } catch (Throwable err) {
+            LOGGER.warn("Unexpected ZookeeperAppSubscriber error.", err);
+        }
+    }
+
+    private interface ThrowableRunnable {
+        void run() throws Throwable;
     }
 }

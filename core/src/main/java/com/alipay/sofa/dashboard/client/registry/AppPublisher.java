@@ -18,42 +18,52 @@ package com.alipay.sofa.dashboard.client.registry;
 
 import com.alipay.sofa.dashboard.client.model.common.Application;
 import com.alipay.sofa.dashboard.client.model.common.RegistryConfig;
-import org.springframework.lang.NonNull;
-
-import java.util.List;
 
 /**
  * Application instance registry.
  *
  * @author chen.pengzhi (chpengzh@foxmail.com)
  */
-public interface AppPublisher<CFG extends RegistryConfig> {
+public abstract class AppPublisher<CFG extends RegistryConfig> {
+
+    private final Application application;
+
+    private final CFG         config;
+
+    protected AppPublisher(Application application, CFG config) {
+        this.application = application;
+        this.config = config;
+    }
+
+    public Application getApplication() {
+        return application;
+    }
+
+    public CFG getConfig() {
+        return config;
+    }
 
     /**
      * Startup registry.
      *
-     * @return return {@code false} if it is already started
+     * @return {@code false}, if it is already started
      */
-    boolean start(CFG config);
+    public abstract boolean start() throws Exception;
 
     /**
      * Shutdown registry.
      */
-    void shutdown();
+    public abstract void shutdown() throws Exception;
 
     /**
      * Publish instance onto registry central.
-     * It should be called when application
-     *
-     * @param instance self application instance
+     * It should be called after started
      */
-    void register(@NonNull Application instance) throws Exception;
+    public abstract void register() throws Exception;
 
     /**
      * Remove instance from registry central.
-     *
-     * @param instance self application instance
      */
-    void unRegister(@NonNull Application instance) throws Exception;
+    public abstract void unRegister() throws Exception;
 
 }
