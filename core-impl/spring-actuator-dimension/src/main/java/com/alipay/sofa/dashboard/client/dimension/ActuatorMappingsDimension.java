@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
  */
 public class ActuatorMappingsDimension implements ApplicationDimension<MappingsDescriptor> {
 
-    private static final String SPIT = ", ";
+    private static final String    SPIT = ", ";
 
     private final MappingsEndpoint endpoint;
 
