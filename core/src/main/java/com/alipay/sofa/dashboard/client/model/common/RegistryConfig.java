@@ -28,7 +28,7 @@ public class RegistryConfig implements Serializable {
     /**
      * Registry 工作地址.
      */
-    private String           address;
+    private String           address          = "127.0.0.1:2181";
 
     public String getAddress() {
         return address;

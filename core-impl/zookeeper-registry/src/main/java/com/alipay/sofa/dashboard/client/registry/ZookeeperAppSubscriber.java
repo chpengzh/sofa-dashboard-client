@@ -23,6 +23,7 @@ import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.TreeCache;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
 import org.apache.curator.framework.recipes.cache.TreeCacheListener;
+import org.apache.zookeeper.KeeperException;
 import org.jboss.netty.util.internal.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,12 +57,11 @@ public class ZookeeperAppSubscriber extends AppSubscriber<ZookeeperRegistryConfi
         boolean startFlag = client.doStart((curatorFramework -> {
             // Add listeners to manage local cache
             TreeCache cache = new TreeCache(curatorFramework,
-                ZookeeperConstants.SOFA_BOOT_CLIENT_ROOT);
+                ZookeeperConstants.SOFA_BOOT_CLIENT_INSTANCE);
             TreeCacheListener listener = (client, event) -> {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Dashboard client event type = {},data = {}", event.getType(),
-                        event.getData());
-                }
+                String dataPath =event.getData() == null ? null: event.getData().getPath();
+                LOGGER.info("Dashboard client event type = {}, path= {}",
+                    event.getType(), dataPath);
                 switch (event.getType()) {
                     case NODE_ADDED:
                     case NODE_UPDATED:
@@ -72,16 +72,21 @@ public class ZookeeperAppSubscriber extends AppSubscriber<ZookeeperRegistryConfi
                         runInSafe(() -> doRemoveApplications(event));
                         break;
                     case CONNECTION_RECONNECTED: // Try to recover data while reconnected
-                        runInSafe(this::initApplications);
+                        runInSafe(this::doRebuildCache);
                         break;
                     default:
                         break;
                 }
             };
             cache.getListenable().addListener(listener);
+            try {
+                cache.start();
+            } catch (Exception e) {
+                LOGGER.error("Start cache error.", e);
+            }
         }));
         if (startFlag) {
-            runInSafe(this::initApplications);
+            runInSafe(this::doRebuildCache);
         }
         return startFlag;
     }
@@ -113,10 +118,20 @@ public class ZookeeperAppSubscriber extends AppSubscriber<ZookeeperRegistryConfi
         return apps == null ? new ArrayList<>() : new ArrayList<>(apps);
     }
 
-    private void initApplications() throws Exception {
-        List<String> appNames = client.getCuratorClient().getChildren()
-            .forPath(ZookeeperConstants.SOFA_BOOT_CLIENT_INSTANCE);
-        if (appNames == null || appNames.isEmpty()) {
+    /**
+     * Fetch all instance information from zookeeper.
+     *
+     * @throws Exception Zookeeper client exception
+     */
+    private void doRebuildCache() throws Exception {
+        List<String> appNames;
+        try {
+            appNames = client.getCuratorClient().getChildren()
+                .forPath(ZookeeperConstants.SOFA_BOOT_CLIENT_INSTANCE);
+            if (appNames == null || appNames.isEmpty()) {
+                return;
+            }
+        } catch (KeeperException.NoNodeException ignore) {
             return;
         }
 
@@ -149,9 +164,14 @@ public class ZookeeperAppSubscriber extends AppSubscriber<ZookeeperRegistryConfi
         LOGGER.info("Dashboard client init success.current app count is {}", applications.size());
     }
 
+    /**
+     * Update cached application instance according to zookeeper node event.
+     *
+     * @param event zookeeper node changed event
+     */
     private void doCreateOrUpdateApplications(TreeCacheEvent event) {
         ChildData chileData = event.getData();
-        Application app = JsonUtils.parseObject(chileData.getData(), Application.class);
+        Application app = client.parseSessionNode(chileData.getPath());
         if (app != null) {
             applications.compute(app.getAppName(), (key, value) -> {
                 Set<Application> group = value == null ? new ConcurrentSkipListSet<>() : value;
@@ -162,9 +182,14 @@ public class ZookeeperAppSubscriber extends AppSubscriber<ZookeeperRegistryConfi
         }
     }
 
+    /**
+     * Remove cached application instance according to zookeeper node event.
+     *
+     * @param event zookeeper node changed event
+     */
     private void doRemoveApplications(TreeCacheEvent event) {
         ChildData chileData = event.getData();
-        Application app = JsonUtils.parseObject(chileData.getData(), Application.class);
+        Application app = client.parseSessionNode(chileData.getPath());
         if (app != null) {
             applications.computeIfPresent(app.getAppName(), (key, value) -> {
                 value.remove(app); // Always remove whatever if it's exists
