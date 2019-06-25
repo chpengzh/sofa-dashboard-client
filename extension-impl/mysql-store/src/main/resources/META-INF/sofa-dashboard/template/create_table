@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS `{table_name}` (
+    `id`        BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    `timestamp` BIGINT NOT NULL,
+    `value`     TEXT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4

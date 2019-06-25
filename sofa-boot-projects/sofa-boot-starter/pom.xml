@@ -15,7 +15,7 @@
     <dependencies>
         <dependency>
             <groupId>com.alipay.sofa</groupId>
-            <artifactId>dashboard-h2-store</artifactId>
+            <artifactId>dashboard-mysql-store</artifactId>
         </dependency>
     </dependencies>
 

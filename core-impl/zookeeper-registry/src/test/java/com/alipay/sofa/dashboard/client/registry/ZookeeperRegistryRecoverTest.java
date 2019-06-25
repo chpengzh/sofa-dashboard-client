@@ -49,7 +49,7 @@ public class ZookeeperRegistryRecoverTest {
 
         // Shutdown server, query cache will be used in a short while
         testServer.stop();
-        Thread.sleep(100);
+        Thread.sleep(200);
 
         List<Application> query = subscriber.getByName(app.getAppName());
         Assert.assertEquals(query.size(), 1);

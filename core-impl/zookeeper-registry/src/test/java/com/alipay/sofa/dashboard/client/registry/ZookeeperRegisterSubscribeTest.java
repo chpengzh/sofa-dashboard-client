@@ -64,7 +64,7 @@ public class ZookeeperRegisterSubscribeTest {
         publisher.register();
 
         // Waiting for event sync
-        Thread.sleep(100);
+        Thread.sleep(200);
 
         // Query none
         List<Application> query = subscriber.getByName("no_such_app");
@@ -99,7 +99,7 @@ public class ZookeeperRegisterSubscribeTest {
         publisher2.register();
 
         // Waiting for event sync
-        Thread.sleep(100);
+        Thread.sleep(200);
 
         // Query applications
         List<Application> allApps = subscriber.getAll();
@@ -145,7 +145,7 @@ public class ZookeeperRegisterSubscribeTest {
         samples.sort(Comparator.naturalOrder());
 
         // Waiting for event sync
-        Thread.sleep(100);
+        Thread.sleep(200);
 
         //Query applications
         List<Application> query = subscriber.getByName(appName);
@@ -177,7 +177,7 @@ public class ZookeeperRegisterSubscribeTest {
         publisher.register();
 
         // Waiting for event sync
-        Thread.sleep(100);
+        Thread.sleep(200);
 
         // Query applications
         List<Application> query = subscriber.getByName(app.getAppName());
@@ -187,7 +187,7 @@ public class ZookeeperRegisterSubscribeTest {
         publisher.unRegister();
 
         // Waiting for event sync
-        Thread.sleep(100);
+        Thread.sleep(200);
         query = subscriber.getByName(app.getAppName());
         Assert.assertTrue(query.isEmpty());
 
@@ -212,7 +212,7 @@ public class ZookeeperRegisterSubscribeTest {
         publisher.register();
 
         // Waiting for event sync
-        Thread.sleep(100);
+        Thread.sleep(200);
 
         // Query applications
         List<Application> query = subscriber.getByName(app.getAppName());
@@ -222,7 +222,7 @@ public class ZookeeperRegisterSubscribeTest {
         publisher.shutdown();
 
         // Waiting for event sync
-        Thread.sleep(100);
+        Thread.sleep(200);
         query = subscriber.getByName(app.getAppName());
         Assert.assertTrue(query.isEmpty());
 

@@ -14,10 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.dashboard.client.dimension;
+package com.alipay.sofa.dashboard.client.store;
 
 /**
  * @author chen.pengzhi (chpengzh@foxmail.com)
  */
-public interface DimensionStorage {
+public class MySQLDimensionStoreTest {
+
 }
