@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.dashboard.client.dimension;
 
+import com.alipay.sofa.dashboard.client.model.dimension.DimensionName;
 import com.alipay.sofa.dashboard.client.model.logger.LoggersDescriptor;
 import org.springframework.boot.actuate.logging.LoggersEndpoint;
 import org.springframework.boot.logging.LogLevel;

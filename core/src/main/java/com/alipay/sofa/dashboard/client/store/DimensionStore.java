@@ -16,11 +16,11 @@
  */
 package com.alipay.sofa.dashboard.client.store;
 
-import com.alipay.sofa.dashboard.client.model.dimension.DimensionRecord;
+import com.alipay.sofa.dashboard.client.model.dimension.StoreRecord;
 
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 /**
  * @author chen.pengzhi (chpengzh@foxmail.com)
@@ -39,14 +39,15 @@ public interface DimensionStore<CFG> {
      *
      * @param dimensionSchemes scheme definitions
      */
-    void createTablesIfNotExists(Map<String, Class> dimensionSchemes);
+    void createTablesIfNotExists(Set<String> dimensionSchemes);
 
     /**
-     * Append a new record
+     * Append a set of new records
      *
-     * @param records dimension record to store
+     * @param breakIfError break if error occurs while batch insert
+     * @param records      dimension record to store
      */
-    void addRecords(List<DimensionRecord> records);
+    void addRecords(boolean breakIfError, List<StoreRecord> records);
 
     /**
      * Query latest records
@@ -55,7 +56,7 @@ public interface DimensionStore<CFG> {
      * @param offset        query offset
      * @param limit         query size limit
      */
-    List<DimensionRecord> getLatestRecords(String dimensionName, int offset, int limit)
-                                                                                       throws SQLException;
+    List<StoreRecord> getLatestRecords(String dimensionName, int offset, int limit)
+                                                                                   throws SQLException;
 
 }

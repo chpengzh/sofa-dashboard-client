@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.dashboard.client.dimension;
 
+import com.alipay.sofa.dashboard.client.model.dimension.DimensionName;
 import com.alipay.sofa.dashboard.client.model.info.InfoDescriptor;
 import org.springframework.boot.actuate.info.InfoEndpoint;
 import org.springframework.util.StringUtils;

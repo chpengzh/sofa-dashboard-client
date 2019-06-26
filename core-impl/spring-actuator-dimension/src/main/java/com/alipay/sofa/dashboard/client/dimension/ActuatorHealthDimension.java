@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.dashboard.client.dimension;
 
+import com.alipay.sofa.dashboard.client.model.dimension.DimensionName;
 import com.alipay.sofa.dashboard.client.model.health.HealthDescriptor;
 import com.alipay.sofa.dashboard.client.utils.JsonUtils;
 import org.springframework.boot.actuate.health.Health;

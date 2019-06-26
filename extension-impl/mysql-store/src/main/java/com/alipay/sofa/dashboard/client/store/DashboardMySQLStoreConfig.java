@@ -57,7 +57,7 @@ public class DashboardMySQLStoreConfig implements Serializable {
         properties.put("url", url);
         properties.put("username", username);
         properties.put("password", password);
-        properties.put("maximumActiveConnections", maximumActiveConnections);
+        properties.put("poolMaximumActiveConnections", String.valueOf(maximumActiveConnections));
         return properties;
     }
 

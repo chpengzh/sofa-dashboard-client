@@ -42,9 +42,6 @@ public class SofaDashboardAppStartListener implements
     @Autowired
     private AppPublisher        register;
 
-    @Autowired
-    private Application         app;
-
     @Override
     public void onApplicationEvent(SofaDashboardAppStartEvent event) {
 

@@ -41,7 +41,7 @@ public class ZookeeperAppSubscriber extends AppSubscriber<ZookeeperRegistryConfi
                                                                     .getLogger(ZookeeperAppSubscriber.class);
 
     /**
-     * In-memory copy of zookeeper session informations
+     * In-memory copy of zookeeper session information
      */
     private volatile Map<String, Set<Application>> applications = new ConcurrentHashMap<>();
 

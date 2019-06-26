@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.dashboard.client.config;
 
+import com.alipay.sofa.dashboard.client.health.DashboardAfterHealthCheckCallback;
 import com.alipay.sofa.dashboard.client.listener.SofaDashboardAppStartListener;
 import com.alipay.sofa.dashboard.client.listener.SofaDashboardContextClosedListener;
 import com.alipay.sofa.dashboard.client.model.common.Application;
@@ -87,6 +88,12 @@ public class AppRegistryConfiguration {
     @ConditionalOnMissingBean
     public SofaDashboardAppStartListener getContextRefreshedListener() {
         return new SofaDashboardAppStartListener();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public DashboardAfterHealthCheckCallback createHealthCheckCallback() {
+        return new DashboardAfterHealthCheckCallback();
     }
 
     private String getLocalIp(SofaDashboardProperties properties) {

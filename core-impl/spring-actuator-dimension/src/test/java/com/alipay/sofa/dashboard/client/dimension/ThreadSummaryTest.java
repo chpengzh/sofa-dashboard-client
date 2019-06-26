@@ -17,6 +17,7 @@
 package com.alipay.sofa.dashboard.client.dimension;
 
 import com.alipay.sofa.dashboard.client.context.DimensionTestContext;
+import com.alipay.sofa.dashboard.client.model.dimension.DimensionName;
 import com.alipay.sofa.dashboard.client.model.thread.ThreadSummaryDescriptor;
 import com.alipay.sofa.dashboard.client.utils.JsonUtils;
 import org.junit.Assert;

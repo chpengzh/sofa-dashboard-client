@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.dashboard.client.store;
 
-import com.alipay.sofa.dashboard.client.model.dimension.DimensionRecord;
+import com.alipay.sofa.dashboard.client.model.dimension.StoreRecord;
 import com.alipay.sofa.dashboard.client.utils.DashboardSQL;
 import com.alipay.sofa.dashboard.client.utils.JsonUtils;
 import org.apache.ibatis.session.SqlSession;
@@ -30,10 +30,7 @@ import java.io.InputStream;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -47,8 +44,6 @@ public class MySQLDimensionStore implements DimensionStore<DashboardMySQLStoreCo
                                                                     .getLogger(MySQLDimensionStore.class);
 
     private final SqlSessionFactory         factory;
-
-    private final Map<String, Class>        schemes             = new ConcurrentHashMap<>();
 
     private final DashboardMySQLStoreConfig config;
 
@@ -70,10 +65,9 @@ public class MySQLDimensionStore implements DimensionStore<DashboardMySQLStoreCo
     }
 
     @Override
-    public void createTablesIfNotExists(Map<String, Class> dimensionSchemes) {
-        schemes.putAll(dimensionSchemes);
+    public void createTablesIfNotExists(Set<String> dimensionSchemes) {
         try (SqlSession session = factory.openSession(true)) {
-            for (String tableName : dimensionSchemes.keySet()) {
+            for (String tableName : dimensionSchemes) {
                 String script = DashboardSQL.get(DashboardSQL.CREATE_TABLE, tableName);
                 try {
                     session.getConnection().prepareStatement(script).executeUpdate();
@@ -85,18 +79,23 @@ public class MySQLDimensionStore implements DimensionStore<DashboardMySQLStoreCo
     }
 
     @Override
-    public void addRecords(List<DimensionRecord> records) {
+    public void addRecords(boolean breakIfError, List<StoreRecord> records) {
         if (records == null || records.isEmpty()) {
             return;
         }
         try (SqlSession session = factory.openSession(true)) {
-            for (DimensionRecord record : records) {
+            for (StoreRecord record : records) {
                 String script = DashboardSQL.get(DashboardSQL.INSERT_ONE, record.getSchemeName());
-                String[] params = { String.valueOf(record.getTimestamp()),
-                        JsonUtils.toJsonString(record.getValue()) };
                 try {
-                    session.getConnection().prepareStatement(script, params).execute();
+                    PreparedStatement statement = session.getConnection().prepareStatement(script);
+                    statement.setLong(1, record.getTimestamp());
+                    statement.setString(2, record.getValue());
+                    statement.executeUpdate();
+
                 } catch (SQLException e) {
+                    if (breakIfError) {
+                        throw new RuntimeException(e);
+                    }
                     LOGGER.warn("Error while execute addRecords.", e);
                 }
             }
@@ -104,25 +103,28 @@ public class MySQLDimensionStore implements DimensionStore<DashboardMySQLStoreCo
     }
 
     @Override
-    public List<DimensionRecord> getLatestRecords(String dimensionName, int offset, int limit)
-                                                                                              throws SQLException {
-        Class<?> serializeModel = schemes.get(dimensionName);
-        if (serializeModel == null) {
-            throw new IllegalArgumentException("No such dimension scheme, name=" + dimensionName);
-        }
+    public List<StoreRecord> getLatestRecords(String dimensionName, int offset, int limit)
+                                                                                          throws SQLException {
         String script = DashboardSQL.get(DashboardSQL.QUERY, dimensionName);
         try (SqlSession session = factory.openSession(true)) {
-            PreparedStatement query = session.getConnection().prepareStatement(script,
-                new String[] { String.valueOf(limit), String.valueOf(offset) });
+            PreparedStatement statement = session.getConnection().prepareStatement(script);
+            statement.setInt(1, limit);
+            statement.setInt(2, offset);
 
             // Execute query
-            try (ResultSet result = query.executeQuery()) {
-                while (!result.isLast()) {
-                    System.out.println(result);
-                    result.next();
+            List<StoreRecord> result = new ArrayList<>();
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (!resultSet.isLast()) {
+                    resultSet.next();
+
+                    StoreRecord next = new StoreRecord();
+                    next.setSchemeName(dimensionName);
+                    next.setTimestamp(resultSet.getLong("timestamp"));
+                    next.setValue(resultSet.getString("value"));
+                    result.add(next);
                 }
             }
+            return result;
         }
-        return new ArrayList<>();
     }
 }
