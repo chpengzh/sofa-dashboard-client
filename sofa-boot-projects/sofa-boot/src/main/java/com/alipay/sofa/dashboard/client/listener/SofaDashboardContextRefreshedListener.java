@@ -17,14 +17,17 @@
 package com.alipay.sofa.dashboard.client.listener;
 
 import com.alipay.sofa.dashboard.client.registry.AppPublisher;
+import com.alipay.sofa.healthcheck.startup.ReadinessCheckListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.actuate.health.Status;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 
 /**
- * By listening to the ApplicationReadyEvent listener, after the application is fully started,
+ * By listening to the ContextRefreshedEvent listener, after the application is fully started,
  * get the client's health check status, and then register
  *
  * @author guolei.sgl (guolei.sgl@antfin.com) 2019/2/19 2:17 PM
@@ -38,8 +41,16 @@ public class SofaDashboardContextRefreshedListener implements
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
+        ApplicationContext context = event.getApplicationContext();
+        ReadinessCheckListener readinessCheckListener = context
+            .getBean(ReadinessCheckListener.class);
+        AppPublisher<?> publisher = context.getBean(AppPublisher.class);
+
         try {
-            AppPublisher<?> publisher = event.getApplicationContext().getBean(AppPublisher.class);
+            String status = readinessCheckListener.getHealthCheckerStatus()
+                            && readinessCheckListener.getHealthCallbackStatus() ? Status.UP
+                .toString() : Status.DOWN.toString();
+            publisher.getApplication().setAppState(status);
             publisher.register();
         } catch (Exception e) {
             LOGGER.info("sofa dashboard client register failed.", e);
