@@ -69,8 +69,8 @@ public class DimensionRecordingSchedule implements InitializingBean {
     @Override
     public void afterPropertiesSet() {
         int nextDelay = calculateNextScheduleTime(initDelayExp).intValue();
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Schedule next store in {} second", nextDelay);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Schedule next store in {} second", nextDelay);
         }
         executors.schedule(new StoreTimerTask(), nextDelay, TimeUnit.SECONDS);
     }
@@ -117,8 +117,8 @@ public class DimensionRecordingSchedule implements InitializingBean {
 
             } finally {
                 int nextDelay = calculateNextScheduleTime(flushPeriodExp).intValue();
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info("Schedule next store in {} second", nextDelay);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Schedule next store in {} second", nextDelay);
                 }
                 executors.schedule(this, nextDelay, TimeUnit.SECONDS);
 
