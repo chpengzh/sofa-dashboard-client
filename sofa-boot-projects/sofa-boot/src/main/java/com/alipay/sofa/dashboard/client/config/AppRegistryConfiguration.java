@@ -16,11 +16,9 @@
  */
 package com.alipay.sofa.dashboard.client.config;
 
-import com.alipay.sofa.dashboard.client.health.DashboardAfterHealthCheckCallback;
-import com.alipay.sofa.dashboard.client.listener.SofaDashboardAppStartListener;
-import com.alipay.sofa.dashboard.client.listener.SofaDashboardContextClosedListener;
 import com.alipay.sofa.dashboard.client.model.common.Application;
-import com.alipay.sofa.dashboard.client.properties.SofaDashboardProperties;
+import com.alipay.sofa.dashboard.client.properties.SofaDashboardClientProperties;
+import com.alipay.sofa.dashboard.client.properties.SofaDashboardZookeeperProperties;
 import com.alipay.sofa.dashboard.client.registry.AppPublisher;
 import com.alipay.sofa.dashboard.client.registry.ZookeeperAppPublisher;
 import com.alipay.sofa.dashboard.client.registry.ZookeeperRegistryConfig;
@@ -39,7 +37,8 @@ import org.springframework.util.StringUtils;
  */
 @Configuration
 @ConditionalOnWebApplication
-@EnableConfigurationProperties({ SofaDashboardProperties.class })
+@EnableConfigurationProperties({ SofaDashboardClientProperties.class,
+                                SofaDashboardZookeeperProperties.class })
 @ConditionalOnProperty(prefix = "com.alipay.sofa.dashboard.client", value = "enable", matchIfMissing = true)
 public class AppRegistryConfiguration {
 
@@ -51,7 +50,7 @@ public class AppRegistryConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public Application getApplicationInstance(Environment env, SofaDashboardProperties prop) {
+    public Application getApplicationInstance(Environment env, SofaDashboardClientProperties prop) {
         long current = System.currentTimeMillis();
 
         Application app = new Application();
@@ -65,43 +64,26 @@ public class AppRegistryConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public AppPublisher getAppInstanceRegistry(SofaDashboardProperties prop, Application application) {
+    public AppPublisher getAppInstanceRegistry(SofaDashboardZookeeperProperties prop,
+                                               Application application) {
         ZookeeperRegistryConfig config = new ZookeeperRegistryConfig();
-        config.setAddress(prop.getZookeeper().getAddress());
-        config.setBaseSleepTimeMs(prop.getZookeeper().getBaseSleepTimeMs());
-        config.setMaxRetries(prop.getZookeeper().getMaxRetries());
-        config.setSessionTimeoutMs(prop.getZookeeper().getSessionTimeoutMs());
-        config.setConnectionTimeoutMs(prop.getZookeeper().getConnectionTimeoutMs());
+        config.setAddress(prop.getAddress());
+        config.setBaseSleepTimeMs(prop.getBaseSleepTimeMs());
+        config.setMaxRetries(prop.getMaxRetries());
+        config.setSessionTimeoutMs(prop.getSessionTimeoutMs());
+        config.setConnectionTimeoutMs(prop.getConnectionTimeoutMs());
 
         ZookeeperAppPublisher registry = new ZookeeperAppPublisher(config, application);
         registry.start();
         return registry;
     }
 
-    @Bean
-    @ConditionalOnMissingBean
-    public SofaDashboardContextClosedListener getContextCloseListener() {
-        return new SofaDashboardContextClosedListener();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public SofaDashboardAppStartListener getContextRefreshedListener() {
-        return new SofaDashboardAppStartListener();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public DashboardAfterHealthCheckCallback createHealthCheckCallback() {
-        return new DashboardAfterHealthCheckCallback();
-    }
-
-    private String getLocalIp(SofaDashboardProperties properties) {
+    private String getLocalIp(SofaDashboardClientProperties properties) {
         NetworkAddressUtils.calculate(null, null);
-        if (StringUtils.isEmpty(properties.getClient().getInstanceIp())) {
+        if (StringUtils.isEmpty(properties.getInstanceIp())) {
             return NetworkAddressUtils.getLocalIP();
         } else {
-            return properties.getClient().getInstanceIp();
+            return properties.getInstanceIp();
         }
     }
 }

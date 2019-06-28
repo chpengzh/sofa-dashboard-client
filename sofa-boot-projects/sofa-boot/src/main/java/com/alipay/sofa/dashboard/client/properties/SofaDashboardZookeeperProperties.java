@@ -16,12 +16,17 @@
  */
 package com.alipay.sofa.dashboard.client.properties;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+@Component
+@ConfigurationProperties(prefix = "com.alipay.sofa.dashboard.zookeeper")
 public class SofaDashboardZookeeperProperties {
 
     /**
      * Zookeeper 工作地址.
      */
-    private String address;
+    private String address             = "127.0.0.1:2181";
 
     /**
      * Zookeeper 客户端错误重试间隔(ms).

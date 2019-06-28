@@ -31,13 +31,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class SofaDashboardContextClosedListener implements ApplicationListener<ContextClosedEvent> {
 
-    @Autowired
-    private AppPublisher register;
-
     @Override
-    public void onApplicationEvent(ContextClosedEvent contextClosedEvent) {
+    public void onApplicationEvent(ContextClosedEvent event) {
         try {
-            register.unRegister();
+            AppPublisher<?> publisher = event.getApplicationContext().getBean(AppPublisher.class);
+            publisher.unRegister();
         } catch (Exception e) {
             e.printStackTrace();
         }

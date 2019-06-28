@@ -16,16 +16,37 @@
  */
 package com.alipay.sofa.dashboard.client.properties;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+@Component
+@ConfigurationProperties(prefix = "com.alipay.sofa.dashboard.client")
 public class SofaDashboardClientProperties {
+
     /**
      * 是否可用
      */
-    private boolean enable     = true;
+    private boolean enable               = true;
 
     /**
      * 实例地址
      */
-    private String  instanceIp = "";
+    private String  instanceIp           = "";
+
+    /**
+     * Dashboard度量数据存储类型
+     */
+    private String  store                = "mysql";
+
+    /**
+     * Dashboard度量数据存储上报延迟期望(s)
+     */
+    private long    storeInitDelayExp    = 30;
+
+    /**
+     * Dashboard度量数据存储上报周期(s)
+     */
+    private long    storeUploadPeriodExp = 60;
 
     public boolean isEnable() {
         return enable;
@@ -43,9 +64,34 @@ public class SofaDashboardClientProperties {
         this.instanceIp = instanceIp;
     }
 
+    public String getStore() {
+        return store;
+    }
+
+    public void setStore(String store) {
+        this.store = store;
+    }
+
+    public long getStoreInitDelayExp() {
+        return storeInitDelayExp;
+    }
+
+    public void setStoreInitDelayExp(long storeInitDelayExp) {
+        this.storeInitDelayExp = storeInitDelayExp;
+    }
+
+    public long getStoreUploadPeriodExp() {
+        return storeUploadPeriodExp;
+    }
+
+    public void setStoreUploadPeriodExp(long storeUploadPeriodExp) {
+        this.storeUploadPeriodExp = storeUploadPeriodExp;
+    }
+
     @Override
     public String toString() {
         return "SofaDashboardClientProperties{" + "enable=" + enable + ", instanceIp='"
-               + instanceIp + '\'' + '}';
+               + instanceIp + '\'' + ", store='" + store + '\'' + ", storeInitDelayExp="
+               + storeInitDelayExp + ", storeUploadPeriodExp=" + storeUploadPeriodExp + '}';
     }
 }

@@ -16,26 +16,33 @@
  */
 package com.alipay.sofa.dashboard.client.listener;
 
-import com.alipay.sofa.dashboard.client.event.SofaDashboardAppAfterStartedEvent;
-import com.alipay.sofa.dashboard.client.event.SofaDashboardAppStartEvent;
-import org.springframework.context.ApplicationContext;
+import com.alipay.sofa.dashboard.client.registry.AppPublisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 
 /**
- * @author chen.pengzhi (chpengzh@foxmail.com)
- */
+ * By listening to the ApplicationReadyEvent listener, after the application is fully started,
+ * get the client's health check status, and then register
+ *
+ * @author guolei.sgl (guolei.sgl@antfin.com) 2019/2/19 2:17 PM
+ **/
 @Component
 public class SofaDashboardContextRefreshedListener implements
                                                   ApplicationListener<ContextRefreshedEvent> {
 
+    private static final Logger LOGGER = LoggerFactory
+                                           .getLogger(SofaDashboardContextRefreshedListener.class);
+
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
-        ApplicationContext applicationContext = event.getApplicationContext();
-
-        applicationContext.publishEvent(new SofaDashboardAppStartEvent(applicationContext));
-        applicationContext.publishEvent(new SofaDashboardAppAfterStartedEvent(applicationContext));
+        try {
+            AppPublisher<?> publisher = event.getApplicationContext().getBean(AppPublisher.class);
+            publisher.register();
+        } catch (Exception e) {
+            LOGGER.info("sofa dashboard client register failed.", e);
+        }
     }
-
 }

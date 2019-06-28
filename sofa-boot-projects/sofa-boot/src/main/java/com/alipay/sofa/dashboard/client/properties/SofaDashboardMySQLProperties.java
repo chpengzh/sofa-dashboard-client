@@ -16,19 +16,39 @@
  */
 package com.alipay.sofa.dashboard.client.properties;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
 /**
  * @author chen.pengzhi (chpengzh@foxmail.com)
  */
+@Component
+@ConfigurationProperties(prefix = "com.alipay.sofa.dashboard.mysql")
 public class SofaDashboardMySQLProperties {
 
+    /**
+     * JDBC Driver
+     */
     private String driver                   = "com.mysql.jdbc.Driver";
 
+    /**
+     * MySQL数据库连接地址
+     */
     private String url                      = "jdbc:mysql://127.0.0.1:3306/sofa_dashboard_client";
 
+    /**
+     * MySQL连接用户名
+     */
     private String username                 = "root";
 
+    /**
+     * MySQL连接用户秘钥
+     */
     private String password                 = "";
 
+    /**
+     * 最大保持连接数
+     */
     private int    maximumActiveConnections = 10;
 
     public String getDriver() {
@@ -69,5 +89,12 @@ public class SofaDashboardMySQLProperties {
 
     public void setMaximumActiveConnections(int maximumActiveConnections) {
         this.maximumActiveConnections = maximumActiveConnections;
+    }
+
+    @Override
+    public String toString() {
+        return "SofaDashboardMySQLProperties{" + "driver='" + driver + '\'' + ", url='" + url
+               + '\'' + ", username='" + username + '\'' + ", password='" + password + '\''
+               + ", maximumActiveConnections=" + maximumActiveConnections + '}';
     }
 }

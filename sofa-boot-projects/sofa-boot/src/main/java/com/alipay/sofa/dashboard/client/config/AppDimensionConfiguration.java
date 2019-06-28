@@ -17,7 +17,7 @@
 package com.alipay.sofa.dashboard.client.config;
 
 import com.alipay.sofa.dashboard.client.dimension.*;
-import com.alipay.sofa.dashboard.client.properties.SofaDashboardProperties;
+import com.alipay.sofa.dashboard.client.properties.SofaDashboardClientProperties;
 import org.springframework.boot.actuate.env.EnvironmentEndpoint;
 import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.boot.actuate.info.InfoEndpoint;
@@ -38,7 +38,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ConditionalOnWebApplication
-@EnableConfigurationProperties({ SofaDashboardProperties.class })
+@EnableConfigurationProperties({ SofaDashboardClientProperties.class })
 @ConditionalOnProperty(prefix = "com.alipay.sofa.dashboard.client", value = "enable", matchIfMissing = true)
 public class AppDimensionConfiguration {
 
