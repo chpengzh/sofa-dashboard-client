@@ -18,6 +18,10 @@
             <artifactId>dashboard-client-sofa-boot</artifactId>
         </dependency>
         <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.alipay.sofa</groupId>
             <artifactId>dashboard-mysql-store</artifactId>
         </dependency>
