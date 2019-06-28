@@ -63,6 +63,7 @@ public class ZookeeperAppPublisher extends AppPublisher<ZookeeperRegistryConfig>
     @Override
     public synchronized void register() throws Exception {
         Application app = getApplication();
+        app.setLastRecover(System.currentTimeMillis()); // Change recover time
 
         if (client.isRunning()) {
             Stat stat = client.getCuratorClient().checkExists()

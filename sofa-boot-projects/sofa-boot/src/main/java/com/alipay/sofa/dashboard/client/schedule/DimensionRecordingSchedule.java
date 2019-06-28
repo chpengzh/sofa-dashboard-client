@@ -26,6 +26,7 @@ import org.springframework.beans.factory.InitializingBean;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -49,6 +50,8 @@ public class DimensionRecordingSchedule implements InitializingBean {
 
     private final long                       flushPeriodExp;
 
+    private final Random                     random = new Random();
+
     public DimensionRecordingSchedule(List<ApplicationDimension> dimensions,
                                       DimensionStore<?> store, long initDelayExp,
                                       long flushPeriodExp) {
@@ -65,7 +68,31 @@ public class DimensionRecordingSchedule implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() {
-        executors.schedule(new StoreTimerTask(), initDelayExp, TimeUnit.SECONDS);
+        int nextDelay = calculateNextScheduleTime(initDelayExp).intValue();
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info("Schedule next store in {} second", nextDelay);
+        }
+        executors.schedule(new StoreTimerTask(), nextDelay, TimeUnit.SECONDS);
+    }
+
+    /**
+     * 计算下一个上报时间.
+     *
+     * @param exp 期望值
+     * @return 下一次上报时间
+     */
+    private Double calculateNextScheduleTime(double exp) {
+        int count = 0;
+        double variance = exp / 2;
+        double minimal = exp / 3;
+        do {
+            double result = Math.sqrt(variance) * random.nextGaussian() + exp;
+            if (result > minimal) {
+                return result;
+            }
+            ++count;
+        } while (count < 10);
+        return exp;
     }
 
     private class StoreTimerTask extends TimerTask {
@@ -89,7 +116,11 @@ public class DimensionRecordingSchedule implements InitializingBean {
                 LOGGER.warn("Unable to flush dimension record", err);
 
             } finally {
-                executors.schedule(this, flushPeriodExp, TimeUnit.SECONDS);
+                int nextDelay = calculateNextScheduleTime(flushPeriodExp).intValue();
+                if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info("Schedule next store in {} second", nextDelay);
+                }
+                executors.schedule(this, nextDelay, TimeUnit.SECONDS);
 
             }
         }

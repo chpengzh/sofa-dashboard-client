@@ -18,10 +18,9 @@ package com.alipay.sofa.dashboard.client.registry;
 
 import com.alipay.sofa.dashboard.client.model.common.Application;
 import org.apache.curator.test.TestingServer;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,19 +32,29 @@ import java.util.List;
  */
 public class ZookeeperRegistryBasicTest {
 
+    private static final Logger           LOGGER = LoggerFactory
+                                                     .getLogger(ZookeeperRegistryBasicTest.class);
+
     private final ZookeeperRegistryConfig config = new ZookeeperRegistryConfig();
 
-    private TestingServer                 testServer;
+    private static TestingServer          testServer;
 
-    @Before
-    public void setupZkServer() throws Exception {
+    @BeforeClass
+    public static void setupZkServer() throws Exception {
         testServer = new TestingServer(2181, true);
         testServer.start();
     }
 
-    @After
-    public void recycleServer() throws IOException {
-        testServer.close();
+    @AfterClass
+    public static void recycleServer() throws IOException {
+        testServer.stop();
+    }
+
+    @Before
+    public void clearData() {
+        if (testServer.getTempDirectory().delete()) {
+            LOGGER.info("Clear data for next test case");
+        }
     }
 
     @Test

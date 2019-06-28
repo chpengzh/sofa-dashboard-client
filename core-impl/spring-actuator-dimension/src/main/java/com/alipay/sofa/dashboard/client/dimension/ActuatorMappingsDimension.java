@@ -53,7 +53,6 @@ public class ActuatorMappingsDimension implements ApplicationDimension<MappingsD
     @Override
     public MappingsDescriptor currentValue() {
         ApplicationMappings mappingsInfo = endpoint.mappings();
-        System.out.println(JsonUtils.toJsonString(mappingsInfo));
 
         final Map<String, MappingsDescriptor.MappingEntity> result = new HashMap<>();
         mappingsInfo.getContexts().forEach((key, value) -> {
