@@ -1,4 +1,0 @@
-SELECT * FROM `{table_name}`
-ORDER BY `id`
-LIMIT ?
-OFFSET ?

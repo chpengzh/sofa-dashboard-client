@@ -1,4 +1,0 @@
-INSERT INTO `{table_name}` (
-    `timestamp`,
-    `value`
- ) VALUES (?, ?)

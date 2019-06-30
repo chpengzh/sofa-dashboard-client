@@ -17,19 +17,10 @@
     <url>https://github.com/sofastack/sofa-dashboard-client</url>
 
     <modules>
-        <!-- Dashboard Client Core Facade -->
         <module>core</module>
-
-        <!-- Core implement -->
-        <module>core-impl/spring-actuator-dimension</module>
-        <module>core-impl/zookeeper-registry</module>
-
-        <!-- External implement -->
-        <module>extension-impl/mysql-store</module>
-
-        <!-- SOFABoot Starter modules -->
-        <module>sofa-boot-projects/sofa-boot</module>
-        <module>sofa-boot-projects/sofa-boot-starter</module>
+        <module>sofa-boot-starter</module>
+        <module>extension-impl</module>
+        <module>dashboard-support</module>
     </modules>
 
     <licenses>
@@ -58,6 +49,7 @@
         <curator.version>2.9.1</curator.version>
         <jmockit.version>1.14</jmockit.version>
         <mybatis.version>3.5.1</mybatis.version>
+        <jackson.version>2.9.7</jackson.version>
 
         <!-- Plugin Version -->
         <coveralls.maven.plugin>3.1.0</coveralls.maven.plugin>
@@ -89,22 +81,7 @@
             </dependency>
             <dependency>
                 <groupId>com.alipay.sofa</groupId>
-                <artifactId>dashboard-client-spring-actuator-dimension</artifactId>
-                <version>1.1.0-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>com.alipay.sofa</groupId>
-                <artifactId>dashboard-zookeeper-registry</artifactId>
-                <version>1.1.0-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>com.alipay.sofa</groupId>
-                <artifactId>dashboard-mysql-store</artifactId>
-                <version>1.1.0-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>com.alipay.sofa</groupId>
-                <artifactId>dashboard-client-sofa-boot</artifactId>
+                <artifactId>dashboard-ext-redis-store</artifactId>
                 <version>1.1.0-SNAPSHOT</version>
             </dependency>
             <dependency>
@@ -115,14 +92,18 @@
 
             <!-- External dependencies -->
             <dependency>
-                <groupId>org.apache.curator</groupId>
-                <artifactId>curator-framework</artifactId>
-                <version>${curator.version}</version>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.curator</groupId>
-                <artifactId>curator-recipes</artifactId>
+                <artifactId>apache-curator</artifactId>
                 <version>${curator.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>org.mybatis</groupId>
@@ -146,12 +127,6 @@
                 <groupId>org.jmockit</groupId>
                 <artifactId>jmockit-coverage</artifactId>
                 <version>${jmockit.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.curator</groupId>
-                <artifactId>curator-test</artifactId>
-                <version>${curator.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
