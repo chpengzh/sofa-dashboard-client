@@ -34,11 +34,6 @@ public class SofaDashboardClientProperties {
     private String  instanceIp           = "";
 
     /**
-     * Dashboard度量数据存储类型
-     */
-    private String  store                = "mysql";
-
-    /**
      * Dashboard度量数据存储上报延迟期望(s)
      */
     private long    storeInitDelayExp    = 30;
@@ -64,14 +59,6 @@ public class SofaDashboardClientProperties {
         this.instanceIp = instanceIp;
     }
 
-    public String getStore() {
-        return store;
-    }
-
-    public void setStore(String store) {
-        this.store = store;
-    }
-
     public long getStoreInitDelayExp() {
         return storeInitDelayExp;
     }
@@ -91,7 +78,7 @@ public class SofaDashboardClientProperties {
     @Override
     public String toString() {
         return "SofaDashboardClientProperties{" + "enable=" + enable + ", instanceIp='"
-               + instanceIp + '\'' + ", store='" + store + '\'' + ", storeInitDelayExp="
-               + storeInitDelayExp + ", storeUploadPeriodExp=" + storeUploadPeriodExp + '}';
+               + instanceIp + '\'' + ", storeInitDelayExp=" + storeInitDelayExp
+               + ", storeUploadPeriodExp=" + storeUploadPeriodExp + '}';
     }
 }

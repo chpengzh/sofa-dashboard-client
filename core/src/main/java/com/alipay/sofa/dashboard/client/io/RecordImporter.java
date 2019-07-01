@@ -24,27 +24,22 @@ import java.util.Set;
 /**
  * @author chen.pengzhi (chpengzh@foxmail.com)
  */
-public interface RecordImporter<CFG> {
-
-    /**
-     * Get store's configuration.
-     *
-     * @return configuration model
-     */
-    CFG getStoreConfig();
+public interface RecordImporter {
 
     /**
      * Prepare tables
      *
+     * @param instanceId       application address(format as ${ip}_${port})
      * @param dimensionSchemes scheme definitions
      */
-    void createTablesIfNotExists(Set<String> dimensionSchemes);
+    void createTablesIfNotExists(String instanceId, Set<String> dimensionSchemes);
 
     /**
      * Append a set of new records
      *
-     * @param records dimension record to store
+     * @param instanceId application address(format as ${ip}_${port})
+     * @param records    dimension record to store
      */
-    void addRecords(List<StoreRecord> records);
+    void addRecords(String instanceId, List<StoreRecord> records);
 
 }

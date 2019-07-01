@@ -50,6 +50,7 @@
         <jmockit.version>1.14</jmockit.version>
         <mybatis.version>3.5.1</mybatis.version>
         <jackson.version>2.9.7</jackson.version>
+        <spring-data-releasetrain.version>Kay-SR14</spring-data-releasetrain.version>
 
         <!-- Plugin Version -->
         <coveralls.maven.plugin>3.1.0</coveralls.maven.plugin>
@@ -91,6 +92,13 @@
             </dependency>
 
             <!-- External dependencies -->
+            <dependency>
+                <groupId>org.springframework.data</groupId>
+                <artifactId>spring-data-releasetrain</artifactId>
+                <version>${spring-data-releasetrain.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson</groupId>
                 <artifactId>jackson-bom</artifactId>

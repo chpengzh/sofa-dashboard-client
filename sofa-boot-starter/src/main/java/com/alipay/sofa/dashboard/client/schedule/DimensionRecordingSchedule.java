@@ -38,9 +38,11 @@ public class DimensionRecordingSchedule implements InitializingBean {
     private static final Logger              LOGGER = LoggerFactory
                                                         .getLogger(DimensionRecordingSchedule.class);
 
+    private final String                     instanceId;
+
     private final List<ApplicationDimension> dimensions;
 
-    private final RecordImporter<?>          importer;
+    private final RecordImporter             importer;
 
     private final ScheduledExecutorService   executors;
 
@@ -50,9 +52,11 @@ public class DimensionRecordingSchedule implements InitializingBean {
 
     private final Random                     random = new Random();
 
-    public DimensionRecordingSchedule(List<ApplicationDimension> dimensions,
-                                      RecordImporter<?> importer, long initDelayExp,
+    public DimensionRecordingSchedule(String instanceId,
+                                      List<ApplicationDimension> dimensions,
+                                      RecordImporter importer, long initDelayExp,
                                       long flushPeriodExp) {
+        this.instanceId = instanceId;
         this.dimensions = dimensions;
         this.importer = importer;
         this.initDelayExp = initDelayExp;
@@ -68,7 +72,7 @@ public class DimensionRecordingSchedule implements InitializingBean {
     public void afterPropertiesSet() {
         Set<String> schemes = dimensions.stream().map(ApplicationDimension::getName)
             .collect(Collectors.toSet());
-        importer.createTablesIfNotExists(schemes);
+        importer.createTablesIfNotExists(instanceId, schemes);
 
         int nextDelay = calculateNextScheduleTime(initDelayExp).intValue();
         if (LOGGER.isDebugEnabled()) {
@@ -112,7 +116,7 @@ public class DimensionRecordingSchedule implements InitializingBean {
                     record.setValue(JsonUtils.toJsonString(dimension.currentValue()));
                     records.add(record);
                 }
-                importer.addRecords(records);
+                importer.addRecords(instanceId, records);
 
             } catch (Throwable err) {
                 LOGGER.warn("Unable to flush dimension record", err);

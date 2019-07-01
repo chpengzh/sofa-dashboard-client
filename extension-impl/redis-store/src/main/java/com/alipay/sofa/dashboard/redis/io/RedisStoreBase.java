@@ -14,28 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.dashboard.client.io;
-
-import com.alipay.sofa.dashboard.client.model.io.StoreRecord;
-import com.alipay.sofa.dashboard.client.model.redis.RedisStoreConfig;
-
-import java.util.ArrayList;
-import java.util.List;
+package com.alipay.sofa.dashboard.redis.io;
 
 /**
+ * Redis Store structure:
+ * <pre>
+ * - {ip}_{port}_{dim_name} (key: ttl by properties definition)
+ *     |- (value: zset, timestamp order)
+ *     |- dim_value_1
+ *     |- dim_value_2
+ *     |- dim_value_3
+ *     |- ...
+ * </pre>
+ *
  * @author chen.pengzhi (chpengzh@foxmail.com)
  */
-public class RedisRecordExporter implements RecordExporter<RedisStoreConfig> {
+class RedisStoreBase {
 
-    @Override
-    public RedisStoreConfig getStoreConfig() {
-        return null;
-    }
-
-    @Override
-    public List<StoreRecord> getLatestRecords(String instanceId, String dimensionName, int offset,
-                                              int limit) {
-        return new ArrayList<>();
+    String getKeyName(String instanceId, String dimName) {
+        return String.format("%s_%s", instanceId, dimName);
     }
 
 }

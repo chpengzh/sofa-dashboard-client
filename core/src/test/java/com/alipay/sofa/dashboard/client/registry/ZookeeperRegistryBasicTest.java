@@ -42,9 +42,13 @@ public class ZookeeperRegistryBasicTest {
 
     private static TestingServer          testServer;
 
+    public ZookeeperRegistryBasicTest() {
+        config.setAddress("127.0.0.1:22181");
+    }
+
     @BeforeClass
     public static void setupZkServer() throws Exception {
-        testServer = new TestingServer(2181, true);
+        testServer = new TestingServer(22181, true);
         testServer.start();
     }
 

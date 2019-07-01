@@ -33,13 +33,17 @@ public class ZookeeperRegistryRecoverTest {
 
     private final ZookeeperRegistryConfig config = new ZookeeperRegistryConfig();
 
+    public ZookeeperRegistryRecoverTest() {
+        config.setAddress("127.0.0.1:22181");
+    }
+
     @Test
     public void subscriberCacheTest() throws Exception {
         final Application app = Application.newBuilder().appName("test_app1").hostName("127.0.0.1")
             .port(8080).startTime(System.currentTimeMillis())
             .lastRecover(System.currentTimeMillis()).appState("UP").build();
 
-        TestingServer testServer = new TestingServer(2181, true);
+        TestingServer testServer = new TestingServer(22181, true);
         testServer.start();
 
         AppPublisher<?> publisher = new ZookeeperAppPublisher(config, app);
@@ -70,7 +74,7 @@ public class ZookeeperRegistryRecoverTest {
             .lastRecover(System.currentTimeMillis()).appState("UP").build();
 
         // Start up zookeeper
-        TestingServer testServer = new TestingServer(2181, true);
+        TestingServer testServer = new TestingServer(22181, true);
         testServer.start();
 
         // Publish app1

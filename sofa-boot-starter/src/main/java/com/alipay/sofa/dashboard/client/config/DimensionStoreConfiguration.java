@@ -17,35 +17,62 @@
 package com.alipay.sofa.dashboard.client.config;
 
 import com.alipay.sofa.dashboard.client.dimension.ApplicationDimension;
-import com.alipay.sofa.dashboard.client.properties.SofaDashboardClientProperties;
-import com.alipay.sofa.dashboard.client.properties.SofaDashboardRedisProperties;
-import com.alipay.sofa.dashboard.client.schedule.DimensionRecordingSchedule;
 import com.alipay.sofa.dashboard.client.io.RecordImporter;
+import com.alipay.sofa.dashboard.client.model.io.StoreRecord;
+import com.alipay.sofa.dashboard.client.properties.SofaDashboardClientProperties;
+import com.alipay.sofa.dashboard.client.schedule.DimensionRecordingSchedule;
+import com.alipay.sofa.dashboard.client.utils.NetworkAddressUtils;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author chen.pengzhi (chpengzh@foxmail.com)
  */
 @Configuration
 @ConditionalOnWebApplication
-@EnableConfigurationProperties({ SofaDashboardClientProperties.class,
-                                SofaDashboardRedisProperties.class })
+@EnableConfigurationProperties({ SofaDashboardClientProperties.class })
 @ConditionalOnProperty(prefix = "com.alipay.sofa.dashboard.client", value = "enable", matchIfMissing = true)
 public class DimensionStoreConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
     public DimensionRecordingSchedule createStoreSchedule(List<ApplicationDimension> dimensions,
-                                                          RecordImporter<?> store,
+                                                          ObjectProvider<RecordImporter> storeProvider,
                                                           SofaDashboardClientProperties props) {
-        return new DimensionRecordingSchedule(dimensions, store, props.getStoreInitDelayExp(),
-            props.getStoreUploadPeriodExp());
+        String instanceId = getLocalIp(props).replace(":", "_");
+        RecordImporter importer = storeProvider.getIfAvailable(EmptyRecordImporter::new);
+        return new DimensionRecordingSchedule(instanceId, dimensions, importer,
+            props.getStoreInitDelayExp(), props.getStoreUploadPeriodExp());
+    }
+
+    /**
+     * An empty implement for record importer
+     */
+    private static class EmptyRecordImporter implements RecordImporter {
+
+        @Override
+        public void createTablesIfNotExists(String instanceId, Set<String> dimensionSchemes) {
+
+        }
+
+        @Override
+        public void addRecords(String instanceId, List<StoreRecord> records) {
+
+        }
+    }
+
+    private String getLocalIp(SofaDashboardClientProperties properties) {
+        NetworkAddressUtils.calculate(null, null);
+        return StringUtils.isEmpty(properties.getInstanceIp()) ? NetworkAddressUtils.getLocalIP()
+            : properties.getInstanceIp();
     }
 }

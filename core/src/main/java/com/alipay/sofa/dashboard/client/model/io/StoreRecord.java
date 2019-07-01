@@ -46,12 +46,6 @@ public class StoreRecord implements Serializable {
     }
 
     @Override
-    public String toString() {
-        return "StoreRecord{" + "schemeName='" + schemeName + '\'' + ", timestamp=" + timestamp
-               + ", value='" + value + '\'' + '}';
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o)
             return true;

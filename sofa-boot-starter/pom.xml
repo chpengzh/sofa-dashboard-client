@@ -21,17 +21,8 @@
             <groupId>com.alipay.sofa</groupId>
             <artifactId>healthcheck-sofa-boot-starter</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
-        </dependency>
 
         <!-- Optional dependencies -->
-        <dependency>
-            <groupId>com.alipay.sofa</groupId>
-            <artifactId>dashboard-ext-redis-store</artifactId>
-            <optional>true</optional>
-        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>

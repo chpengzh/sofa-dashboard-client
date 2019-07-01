@@ -14,16 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.dashboard.client.properties;
+package com.alipay.sofa.dashboard.redis.context;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
  * @author chen.pengzhi (chpengzh@foxmail.com)
  */
-@Component
-@ConfigurationProperties(prefix = "com.alipay.sofa.dashboard.redis")
-public class SofaDashboardRedisProperties {
+@SpringBootApplication
+public class RedisTestContext {
 
 }

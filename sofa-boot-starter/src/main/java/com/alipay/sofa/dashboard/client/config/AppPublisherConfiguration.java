@@ -40,7 +40,7 @@ import org.springframework.util.StringUtils;
 @EnableConfigurationProperties({ SofaDashboardClientProperties.class,
                                 SofaDashboardZookeeperProperties.class })
 @ConditionalOnProperty(prefix = "com.alipay.sofa.dashboard.client", value = "enable", matchIfMissing = true)
-public class AppRegistryConfiguration {
+public class AppPublisherConfiguration {
 
     private static final String KEY_SPRING_APP_NAME = "spring.application.name";
 
@@ -62,10 +62,10 @@ public class AppRegistryConfiguration {
         return app;
     }
 
-    @Bean
+    @Bean(destroyMethod = "shutdown")
     @ConditionalOnMissingBean
-    public AppPublisher getAppInstanceRegistry(SofaDashboardZookeeperProperties prop,
-                                               Application application) {
+    public AppPublisher getAppPublisher(SofaDashboardZookeeperProperties prop,
+                                        Application application) {
         ZookeeperRegistryConfig config = new ZookeeperRegistryConfig();
         config.setAddress(prop.getAddress());
         config.setBaseSleepTimeMs(prop.getBaseSleepTimeMs());
@@ -80,10 +80,7 @@ public class AppRegistryConfiguration {
 
     private String getLocalIp(SofaDashboardClientProperties properties) {
         NetworkAddressUtils.calculate(null, null);
-        if (StringUtils.isEmpty(properties.getInstanceIp())) {
-            return NetworkAddressUtils.getLocalIP();
-        } else {
-            return properties.getInstanceIp();
-        }
+        return StringUtils.isEmpty(properties.getInstanceIp()) ? NetworkAddressUtils.getLocalIP()
+            : properties.getInstanceIp();
     }
 }

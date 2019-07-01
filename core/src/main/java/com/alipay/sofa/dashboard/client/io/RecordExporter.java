@@ -23,23 +23,14 @@ import java.util.List;
 /**
  * @author chen.pengzhi (chpengzh@foxmail.com)
  */
-public interface RecordExporter<CFG> {
-
-    /**
-     * Get store's configuration.
-     *
-     * @return configuration model
-     */
-    CFG getStoreConfig();
+public interface RecordExporter {
 
     /**
      * Query latest records
      *
      * @param instanceId    instanceId
-     * @param dimensionName dimensionName
-     * @param offset        query offset
-     * @param limit         query size limit
+     * @param schemeName dimensionName
+     * @param duration      last duration(ms)
      */
-    List<StoreRecord> getLatestRecords(String instanceId, String dimensionName, int offset,
-                                       int limit);
+    List<StoreRecord> getLatestRecords(String instanceId, String schemeName, long duration);
 }
